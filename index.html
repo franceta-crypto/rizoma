@@ -329,7 +329,7 @@ function draw3D(){
       let by=H/2 + b.y*scaleB;
       let score=proximityScore(particles[i].book, particles[j].book);
       let dist=Math.hypot(ax-bx, ay-by);
-      if(dist<150 && score>0){
+      if(dist<999999 && score>2){
         ctx.beginPath();
         ctx.moveTo(ax,ay);
         ctx.lineTo(bx,by);
