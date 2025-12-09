@@ -199,14 +199,11 @@ const books = [
   {title:"Il mondo perduto", author:"Arthur Conan Doyle", desc:"Esplorazione preistorica in Sud America.", url:"#", color:"#b39dff", categories:["Fantascienza","Avventura","Classici"]}
 ];
 
-// ----------------------
-// Setup canvas
-// ----------------------
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let W = canvas.width = window.innerWidth;
 let H = canvas.height = window.innerHeight;
-window.addEventListener('resize',()=>{ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
+window.addEventListener('resize', ()=>{ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; });
 
 // ----------------------
 // Particles 3D
@@ -235,8 +232,7 @@ for(let i=0;i<books.length;i++){
 // Indice di prossimità
 // ----------------------
 function proximityScore(bookA, bookB){
-  const shared = bookA.categories.filter(cat => bookB.categories.includes(cat));
-  return shared.length;
+  return bookA.categories.filter(cat => bookB.categories.includes(cat)).length;
 }
 
 // ----------------------
@@ -248,44 +244,53 @@ let rotY = 0;
 const FOV = 500;
 
 let isDragging = false;
-let lastMouseX = 0;
-let lastMouseY = 0;
+let lastX = 0;
+let lastY = 0;
 
-window.addEventListener('keydown', e=>{
-  if(e.key==="ArrowUp") cameraZ -= 50;
-  if(e.key==="ArrowDown") cameraZ += 50;
-  if(e.key==="ArrowLeft") rotY -= 0.05;
-  if(e.key==="ArrowRight") rotY += 0.05;
-});
-
+// Mouse
 canvas.addEventListener('mousedown', e=>{
-  isDragging=true;
-  lastMouseX=e.clientX;
-  lastMouseY=e.clientY;
+  isDragging=true; lastX=e.clientX; lastY=e.clientY;
 });
 canvas.addEventListener('mouseup', ()=> isDragging=false);
 canvas.addEventListener('mouseleave', ()=> isDragging=false);
 canvas.addEventListener('mousemove', e=>{
   if(isDragging){
-    const dx = e.clientX - lastMouseX;
-    const dy = e.clientY - lastMouseY;
-    rotY += dx*0.005;
-    rotX += dy*0.005;
-    lastMouseX=e.clientX;
-    lastMouseY=e.clientY;
+    rotY += (e.clientX - lastX)*0.005;
+    rotX += (e.clientY - lastY)*0.005;
+    lastX = e.clientX;
+    lastY = e.clientY;
   }
 });
+
+// Touch
+canvas.addEventListener('touchstart', e=>{
+  if(e.touches.length===1){
+    isDragging=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
+  }
+});
+canvas.addEventListener('touchmove', e=>{
+  if(isDragging && e.touches.length===1){
+    rotY += (e.touches[0].clientX - lastX)*0.005;
+    rotX += (e.touches[0].clientY - lastY)*0.005;
+    lastX = e.touches[0].clientX;
+    lastY = e.touches[0].clientY;
+  }
+});
+canvas.addEventListener('touchend', ()=> isDragging=false);
+
+// Zoom con rotellina
+canvas.addEventListener('wheel', e=>{ cameraZ += e.deltaY*0.5; });
 
 // ----------------------
 // Rotazione 3D
 // ----------------------
 function rotate3D(x,y,z,rx,ry){
-  let cosX = Math.cos(rx), sinX = Math.sin(rx);
-  let y1 = y*cosX - z*sinX;
-  let z1 = y*sinX + z*cosX;
-  let cosY = Math.cos(ry), sinY = Math.sin(ry);
-  let x2 = x*cosY + z1*sinY;
-  let z2 = -x*sinY + z1*cosY;
+  let cosX=Math.cos(rx), sinX=Math.sin(rx);
+  let y1=y*cosX - z*sinX;
+  let z1=y*sinX + z*cosX;
+  let cosY=Math.cos(ry), sinY=Math.sin(ry);
+  let x2=x*cosY + z1*sinY;
+  let z2=-x*sinY + z1*cosY;
   return {x:x2, y:y1, z:z2};
 }
 
@@ -297,42 +302,42 @@ function draw3D(){
 
   for(let i=0;i<particles.length;i++){
     for(let j=i+1;j<particles.length;j++){
-      let a = rotate3D(particles[i].x - W/2, particles[i].y - H/2, particles[i].z - cameraZ, rotX, rotY);
-      let b = rotate3D(particles[j].x - W/2, particles[j].y - H/2, particles[j].z - cameraZ, rotX, rotY);
+      let a=rotate3D(particles[i].x-W/2, particles[i].y-H/2, particles[i].z-cameraZ, rotX, rotY);
+      let b=rotate3D(particles[j].x-W/2, particles[j].y-H/2, particles[j].z-cameraZ, rotX, rotY);
 
-      let scaleA = FOV/(FOV + a.z);
-      let scaleB = FOV/(FOV + b.z);
-      let ax = W/2 + a.x*scaleA;
-      let ay = H/2 + a.y*scaleA;
-      let bx = W/2 + b.x*scaleB;
-      let by = H/2 + b.y*scaleB;
+      let scaleA=FOV/(FOV+a.z);
+      let scaleB=FOV/(FOV+b.z);
+      let ax=W/2 + a.x*scaleA;
+      let ay=H/2 + a.y*scaleA;
+      let bx=W/2 + b.x*scaleB;
+      let by=H/2 + b.y*scaleB;
 
-      let score = proximityScore(particles[i].book, particles[j].book);
-      let dist = Math.hypot(ax-bx, ay-by);
+      let score=proximityScore(particles[i].book, particles[j].book);
+      let dist=Math.hypot(ax-bx, ay-by);
       if(dist<150 && score>0){
         ctx.beginPath();
         ctx.moveTo(ax,ay);
         ctx.lineTo(bx,by);
-        ctx.strokeStyle = `rgba(130,190,220,${0.05*score + 0.05})`;
-        ctx.lineWidth = Math.min(2,score);
+        ctx.strokeStyle=`rgba(130,190,220,${0.05*score + 0.05})`;
+        ctx.lineWidth=Math.min(2,score);
         ctx.stroke();
       }
     }
   }
 
   particles.forEach(p=>{
-    let r3 = rotate3D(p.x-W/2, p.y-H/2, p.z-cameraZ, rotX, rotY);
-    let scale = FOV/(FOV + r3.z);
-    let x = W/2 + r3.x*scale;
-    let y = H/2 + r3.y*scale;
-    let r = p.r*scale;
+    let r3=rotate3D(p.x-W/2, p.y-H/2, p.z-cameraZ, rotX, rotY);
+    let scale=FOV/(FOV + r3.z);
+    let x=W/2 + r3.x*scale;
+    let y=H/2 + r3.y*scale;
+    let r=p.r*scale;
     if(r>0){
       ctx.beginPath();
       ctx.arc(x,y,r,0,Math.PI*2);
-      ctx.fillStyle = p.book.color;
+      ctx.fillStyle=p.book.color;
       ctx.fill();
     }
-    p.x += p.vx; p.y += p.vy;
+    p.x+=p.vx; p.y+=p.vy;
     if(p.x<0||p.x>W)p.vx*=-1;
     if(p.y<0||p.y>H)p.vy*=-1;
   });
@@ -343,35 +348,45 @@ function draw3D(){
 draw3D();
 
 // ----------------------
-// Modal cliccabile in 3D
+// Modal cliccabile
 // ----------------------
 const modal = document.getElementById('modal');
 const backdrop = document.getElementById('backdrop');
 
-canvas.addEventListener('click', e=>{
-  const rect = canvas.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
+function openModal(book){
+  document.getElementById('modalTitle').textContent = book.title;
+  document.getElementById('modalAuthor').textContent = "Autore: "+book.author;
+  document.getElementById('modalDesc').textContent = "Descrizione: "+book.desc;
+  document.getElementById('modalCategories').textContent = "Categorie: "+book.categories.join(", ");
+  document.getElementById('modalLink').href = book.url;
+  modal.style.display='block';
+  backdrop.style.display='block';
+}
 
+// Click o tap su particella
+function handleClick(x, y){
   particles.forEach(p=>{
-    let r3 = rotate3D(p.x-W/2, p.y-H/2, p.z-cameraZ, rotX, rotY);
-    let scale = FOV/(FOV + r3.z);
-    let x = W/2 + r3.x*scale;
-    let y = H/2 + r3.y*scale;
-    let r = p.r*scale;
-
-    let dx = x - mx;
-    let dy = y - my;
-    if(Math.sqrt(dx*dx + dy*dy)<12){
-      document.getElementById('modalTitle').textContent = p.book.title;
-      document.getElementById('modalAuthor').textContent = "Autore: "+p.book.author;
-      document.getElementById('modalDesc').textContent = "Descrizione: "+p.book.desc;
-      document.getElementById('modalCategories').textContent = "Categorie: "+p.book.categories.join(", ");
-      document.getElementById('modalLink').href = p.book.url;
-      modal.style.display='block';
-      backdrop.style.display='block';
+    let r3=rotate3D(p.x-W/2, p.y-H/2, p.z-cameraZ, rotX, rotY);
+    let scale=FOV/(FOV + r3.z);
+    let px=W/2 + r3.x*scale;
+    let py=H/2 + r3.y*scale;
+    let r=p.r*scale;
+    if(Math.hypot(px-x, py-y) < r){
+      openModal(p.book);
     }
   });
+}
+
+canvas.addEventListener('click', e=>{
+  const rect=canvas.getBoundingClientRect();
+  handleClick(e.clientX - rect.left, e.clientY - rect.top);
+});
+
+canvas.addEventListener('touchend', e=>{
+  if(e.changedTouches.length===1){
+    const rect=canvas.getBoundingClientRect();
+    handleClick(e.changedTouches[0].clientX - rect.left, e.changedTouches[0].clientY - rect.top);
+  }
 });
 
 backdrop.addEventListener('click', ()=>{
@@ -379,7 +394,6 @@ backdrop.addEventListener('click', ()=>{
   backdrop.style.display='none';
 });
 </script>
-</body>
-</html></script>
+
 </body>
 </html>
