@@ -1,201 +1,234 @@
 <DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8">
+  <html lang="it">
+  <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-<title>Rete particellare libri consigliati</title>
-<style>
-  body { margin:0; font-family: sans-serif; background: #071021; color: #fff; overflow:hidden; }
-  canvas { display:block; position:fixed; top:0; left:0; z-index:0; }
-  .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-           background:#0f1a26; padding:20px; border-radius:12px; max-width:400px; z-index:10; }
-  .modal h2 { margin-top:0; }
-  .modal button { margin-top:15px; padding:6px 12px; background:#7be0ff; border:none; border-radius:6px; cursor:pointer; }
-  .backdrop { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:5; }
-</style>
-</head>
-<body>
+  <title>Rete particellare libri consigliati</title>
+  <style>
+    body { margin:0; font-family: sans-serif; background: #071021; color: #fff; overflow:hidden; }
+    canvas { display:block; position:fixed; top:0; left:0; z-index:0; }
+    .modal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+             background:#0f1a26; padding:20px; border-radius:12px; max-width:400px; z-index:10; }
+    .modal h2 { margin-top:0; }
+    .modal button { margin-top:15px; padding:6px 12px; background:#7be0ff; border:none; border-radius:6px; cursor:pointer; }
+    .backdrop { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:5; }
+  </style>
+  </head>
+  <body>
+  
+  <div class="backdrop" id="backdrop"></div>
+  <div class="modal" id="modal">
+    <h2 id="modalTitle">Titolo libro</h2>
+    <p id="modalAuthor">Autore</p>
+    <p id="modalDesc">Descrizione libro</p>
+    <p id="modalCategories">Categorie</p>
+    <a id="modalLink" href="#" target="_blank"><button>Vai al libro</button></a>
+  </div>
+  
+  <canvas id="canvas"></canvas>
+  
+  <script>
+  // ----------------------
+  // Generazione libri di esempio
+  // ----------------------
 
-<div class="backdrop" id="backdrop"></div>
-<div class="modal" id="modal">
-  <h2 id="modalTitle">Titolo libro</h2>
-  <p id="modalAuthor">Autore</p>
-  <p id="modalDesc">Descrizione libro</p>
-  <p id="modalCategories">Categorie</p>
-  <a id="modalLink" href="#" target="_blank"><button>Vai al libro</button></a>
-</div>
-
-<canvas id="canvas"></canvas>
-
-<script>
-// ----------------------
-// Generazione libri di esempio
-// ----------------------
 const books = [
-  {title:"Il nome della rosa", author:"Umberto Eco", desc:"Mistero, storia e filosofia in un’abbazia medievale.", url:"#", color:"#7be0ff", categories:["Storico","Mistero","Classici"]},
-  {title:"Se questo è un uomo", author:"Primo Levi", desc:"Memoria dell’olocausto e riflessione sull’umanità.", url:"#", color:"#8ef1b0", categories:["Storia","Biografia","Saggio"]},
-  {title:"La solitudine dei numeri primi", author:"Paolo Giordano", desc:"Storia di due ragazzi segnati da un’adolescenza traumatica.", url:"#", color:"#ffb86c", categories:["Narrativa contemporanea","Romantico","Psicologico"]},
-  {title:"1984", author:"George Orwell", desc:"Distopia sul totalitarismo e controllo sociale.", url:"#", color:"#ffc07b", categories:["Distopico","Classici","Fantascienza"]},
-  {title:"Il Gattopardo", author:"Giuseppe Tomasi di Lampedusa", desc:"Romanzo storico sull'aristocrazia siciliana.", url:"#", color:"#8affc0", categories:["Storico","Classici","Narrativa"]},
-  {title:"Le città invisibili", author:"Italo Calvino", desc:"Visioni fantastiche di città immaginarie.", url:"#", color:"#c07bff", categories:["Fantasy","Fantastico","Classici"]},
-  {title:"Storia della bellezza", author:"Umberto Eco", desc:"Saggio sulla bellezza attraverso i secoli.", url:"#", color:"#7bafff", categories:["Saggio","Arte","Filosofia"]},
-  {title:"La ragazza con l'orecchino di perla", author:"Tracy Chevalier", desc:"Romanzo storico ambientato nell'Olanda del XVII secolo.", url:"#", color:"#7bffc0", categories:["Storico","Narrativa","Romantico"]},
-  {title:"Novecento", author:"Alessandro Baricco", desc:"Racconto poetico di un pianista misterioso.", url:"#", color:"#ffa7a7", categories:["Narrativa contemporanea","Novella","Musica"]},
-  {title:"Io non ho paura", author:"Niccolò Ammaniti", desc:"Ritratto drammatico dell'infanzia e del crimine.", url:"#", color:"#ff7bbf", categories:["Narrativa contemporanea","Thriller","Psicologico"]},
-  {title:"La paranza dei bambini", author:"Roberto Saviano", desc:"Storia cruda di giovani a Napoli dentro la criminalità.", url:"#", color:"#7be0d8", categories:["Narrativa contemporanea","Poliziesco","Società"]},
-  {title:"Il cacciatore di aquiloni", author:"Khaled Hosseini", desc:"Romanzo intenso sull'amicizia e tradimento in Afghanistan.", url:"#", color:"#d78bff", categories:["Narrativa","Drammatico","Classici moderni"]},
-  {title:"Il barone rampante", author:"Italo Calvino", desc:"Favola filosofica di un giovane che vive sugli alberi.", url:"#", color:"#7bdaff", categories:["Fantastico","Classici","Narrativa"]},
-  {title:"Uno, nessuno e centomila", author:"Luigi Pirandello", desc:"Riflessione sull'identità e la percezione di sé.", url:"#", color:"#ffd77b", categories:["Classici","Psicologico","Saggio"]},
-  {title:"Gomorra", author:"Roberto Saviano", desc:"Inchiesta sulla criminalità organizzata in Campania.", url:"#", color:"#9aff7b", categories:["Saggio","Inchiesta","Società"]},
-  {title:"La forma dell'acqua", author:"Andrea Camilleri", desc:"Raccolta di racconti del commissario Montalbano.", url:"#", color:"#7b9aff", categories:["Giallo","Narrativa","Poliziesco"]},
-  {title:"Il fu Mattia Pascal", author:"Luigi Pirandello", desc:"Romanzo sull'alienazione e l'identità.", url:"#", color:"#ff7b7b", categories:["Classici","Narrativa","Psicologico"]},
-  {title:"La coscienza di Zeno", author:"Italo Svevo", desc:"Romanzo psicologico e confessione di un uomo malato.", url:"#", color:"#7affc4", categories:["Classici","Narrativa","Psicologico"]},
-  {title:"L'amica geniale", author:"Elena Ferrante", desc:"Primo libro di una saga sull'amicizia femminile a Napoli.", url:"#", color:"#c4aaff", categories:["Narrativa contemporanea","Romanzo","Donna"]},
-  {title:"La ragazza nella nebbia", author:"Donato Carrisi", desc:"Thriller psicologico ambientato tra i monti.", url:"#", color:"#aaffd5", categories:["Thriller","Giallo","Narrativa"]},
-  {title:"Pane e tempesta", author:"Stefania Auci", desc:"Romanzo storico nella Sicilia del XIX secolo.", url:"#", color:"#ffbaff", categories:["Storico","Narrativa","Famiglia"]},
-  {title:"Bianca come il latte, rossa come il sangue", author:"Alessandro D'Avenia", desc:"Romanzo adolescenziale e intenso.", url:"#", color:"#baff7b", categories:["Narrativa contemporanea","Young Adult","Romantico"]},
-  {title:"Non lasciarmi", author:"Kazuo Ishiguro", desc:"Distopia struggente sull'identità e il destino.", url:"#", color:"#7ddaff", categories:["Distopico","Fantascienza","Drammatico"]},
-  {title:"Il giorno della civetta", author:"Leonardo Sciascia", desc:"Romanzo corale sulla mafia in Sicilia.", url:"#", color:"#ff9f7b", categories:["Giallo","Narrativa","Storico"]},
-  {title:"La Mennulara", author:"Simonetta Agnello Hornby", desc:"Saga familiare siciliana e segreti antichi.", url:"#", color:"#9fb7ff", categories:["Narrativa","Storico","Drammatico"]},
-  {title:"Q", author:"Luther Blissett", desc:"Thriller storico ambientato durante la Riforma.", url:"#", color:"#7bf7ff", categories:["Storico","Thriller","Narrativa"]},
-  {title:"Seta", author:"Alessandro Baricco", desc:"Racconto poetico di un mercante francese in Giappone.", url:"#", color:"#ff7fc0", categories:["Narrativa","Storico","Romantico"]},
-  {title:"Il Gattopardo – La cultura", author:"Giuseppe Tomasi di Lampedusa", desc:"Riflessione sul cambiamento sociale e culturale.", url:"#", color:"#c0ff7b", categories:["Saggio","Cultura","Storia"]},
-  {title:"Io e te", author:"Niccolò Ammaniti", desc:"Breve romanzo sull'adolescenza e l'alienazione.", url:"#", color:"#7bffda", categories:["Narrativa contemporanea","Romantico","Psicologico"]},
-  {title:"I Malavoglia", author:"Giovanni Verga", desc:"Romanzo verista sulla famiglia siciliana.", url:"#", color:"#ff7b87", categories:["Classici","Narrativa","Storico"]},
-  {title:"Il vecchio e il bambino", author:"Wolfango Soldati", desc:"Viaggio e memoria tra vecchio e giovane.", url:"#", color:"#7b87ff", categories:["Narrativa","Sentimentale","Famiglia"]},
-  {title:"Cristo si è fermato a Eboli", author:"Carlo Levi", desc:"Memorie del confino e racconto dell'Italia meridionale.", url:"#", color:"#ffbf7b", categories:["Memoria","Storia","Classici"]},
-  {title:"Fontamara", author:"Ignazio Silone", desc:"Romanzo politico e sociale ambientato in Abruzzo.", url:"#", color:"#7bff87", categories:["Classici","Narrativa","Sociale"]},
-  {title:"La tregua", author:"Primo Levi", desc:"Il ritorno dalla deportazione raccontato con delicatezza.", url:"#", color:"#87d7ff", categories:["Memoria","Biografia","Storia"]},
-  {title:"Novecento italiano", author:"Marco Santagata", desc:"Antologia della letteratura italiana del '900.", url:"#", color:"#d7ff7b", categories:["Saggio","Letteratura","Storia"]},
-  {title:"Il giorno in cui ci incontreremo", author:"Khaled Hosseini", desc:"Romanzo di vita e speranza dopo il conflitto.", url:"#", color:"#7bffbf", categories:["Narrativa","Drammatico","Società"]},
-  {title:"L'amore molesto", author:"Elena Ferrante", desc:"Indagine intima su famiglia e segreti.", url:"#", color:"#ff7be7", categories:["Narrativa contemporanea","Psicologico","Donna"]},
-  {title:"La coscienza del prigioniero", author:"Antonio Tabucchi", desc:"Racconto su memoria e fuga dalla dittatura.", url:"#", color:"#7b7bff", categories:["Narrativa","Storico","Filosofia"]},
-  {title:"Il deserto dei Tartari", author:"Dino Buzzati", desc:"Romanzo esistenziale e simbolico.", url:"#", color:"#ff7bde", categories:["Classici","Fantastico","Filosofia"]},
-  {title:"Se non ora, quando?", author:"Primo Levi", desc:"Romanzo sulla resistenza e la guerra partigiana.", url:"#", color:"#7bffaf", categories:["Storico","Guerra","Narrativa"]},
-  {title:"Il mondo salvato dai ragazzini", author:"Erri De Luca", desc:"Raccolta di racconti poetici e riflessivi.", url:"#", color:"#afff7b", categories:["Narrativa contemporanea","Racconti","Poetico"]},
-  {title:"Accabadora", author:"Carmela Serrano", desc:"Romanzo sulla Sardegna e sulla morte.", url:"#", color:"#7bafff", categories:["Narrativa","Storico","Drammatico"]},
-  {title:"Canne al vento", author:"Grazia Deledda", desc:"Romanzo verista sulla Sardegna e le sue tradizioni.", url:"#", color:"#ffaf7b", categories:["Classici","Narrativa","Storico"]},
-  {title:"La chimera", author:"Sebastiano Vassalli", desc:"Storia di una donna accusata di stregoneria nel '600.", url:"#", color:"#7bffdf", categories:["Storico","Narrativa","Mistero"]},
-  {title:"Il partigiano Johnny", author:"Beppe Fenoglio", desc:"Romanzo sulla Resistenza e la guerra partigiana.", url:"#", color:"#afffdf", categories:["Narrativa","Guerra","Storico"]},
-  {title:"Va' dove ti porta il cuore", author:"Susanna Tamaro", desc:"Romanzo epistolare sulle relazioni familiari.", url:"#", color:"#dfafff", categories:["Narrativa contemporanea","Romantico","Famiglia"]},
-  {title:"Il sentiero dei nidi di ragno", author:"Italo Calvino", desc:"Romanzo sulla Resistenza italiana.", url:"#", color:"#a2ff8c", categories:["Storico","Guerra","Narrativa"]},
-  {title:"La luna e i falò", author:"Cesare Pavese", desc:"Ritorno alle origini nella campagna piemontese.", url:"#", color:"#ff8cda", categories:["Classici","Narrativa","Psicologico"]},
-  {title:"Lessico famigliare", author:"Natalia Ginzburg", desc:"Memorie di una famiglia italiana.", url:"#", color:"#8cdaff", categories:["Memoria","Famiglia","Narrativa"]},
-  {title:"Horcynus Orca", author:"Stefano D'Arrigo", desc:"Epopea del mare siciliano.", url:"#", color:"#ffb38c", categories:["Epico","Narrativa","Classici moderni"]},
-  {title:"L'isola di Arturo", author:"Elsa Morante", desc:"Romanzo di formazione su un'isola napoletana.", url:"#", color:"#b38cff", categories:["Narrativa","Formazione","Classici"]},
-  {title:"Il sorriso dell'ignoto marinaio", author:"Vincenzo Consolo", desc:"Romanzo storico sulla rivolta siciliana.", url:"#", color:"#8cffb3", categories:["Storico","Narrativa","Politico"]},
-  {title:"La storia", author:"Elsa Morante", desc:"Epopea romana durante la seconda guerra mondiale.", url:"#", color:"#ff8c8c", categories:["Storico","Guerra","Narrativa"]},
-  {title:"Allegro ma non troppo", author:"Carlo M. Cipolla", desc:"Le leggi fondamentali della stupidità umana.", url:"#", color:"#8cffec", categories:["Saggio","Umoristico","Sociologia"]},
-  {title:"Il sistema periodico", author:"Primo Levi", desc:"Racconti autobiografici legati agli elementi chimici.", url:"#", color:"#ecff8c", categories:["Autobiografia","Saggio","Scienza"]},
-  {title:"La ragazza del treno", author:"Paula Hawkins", desc:"Thriller psicologico su un misterioso omicidio.", url:"#", color:"#ffce8c", categories:["Thriller","Giallo","Psicologico"]},
-  {title:"Il silenzio delle ragazze", author:"Pat Barker", desc:"La guerra di Troia dal punto di vista femminile.", url:"#", color:"#8cceff", categories:["Storico","Mitologia","Donna"]},
-  {title:"Sottomissione", author:"Michel Houellebecq", desc:"Distopia politica nella Francia del futuro.", url:"#", color:"#ce8cff", categories:["Distopico","Politico","Narrativa"]},
-  {title:"Il talento del ribelle", author:"Michele Serra", desc:"Riflessioni sull'Italia contemporanea.", url:"#", color:"#8cff9d", categories:["Saggio","Società","Politico"]},
-  {title:"La peste", author:"Albert Camus", desc:"Romanzo filosofico su un'epidemia ad Algeri.", url:"#", color:"#ff9d8c", categories:["Classici","Filosofia","Narrativa"]},
-  {title:"Lo straniero", author:"Albert Camus", desc:"Riflessione sull'assurdità dell'esistenza.", url:"#", color:"#9dff8c", categories:["Classici","Esistenzialismo","Narrativa"]},
-  {title:"Fahrenheit 451", author:"Ray Bradbury", desc:"Distopia sulla censura e la cultura.", url:"#", color:"#8c9dff", categories:["Distopico","Fantascienza","Classici"]},
-  {title:"Il signore delle mosche", author:"William Golding", desc:"Allegoria sulla natura umana.", url:"#", color:"#ff8c9d", categories:["Classici","Psicologico","Allegoria"]},
-  {title:"Cecità", author:"José Saramago", desc:"Allegoria su un'epidemia di cecità.", url:"#", color:"#9dffce", categories:["Allegoria","Narrativa","Filosofia"]},
-  {title:"Il processo", author:"Franz Kafka", desc:"Romanzo sull'alienazione burocratica.", url:"#", color:"#ffce9d", categories:["Classici","Psicologico","Filosofia"]},
-  {title:"La metamorfosi", author:"Franz Kafka", desc:"Racconto surreale sulla trasformazione.", url:"#", color:"#9dceff", categories:["Classici","Surreale","Psicologico"]},
-  {title:"Il grande Gatsby", author:"F. Scott Fitzgerald", desc:"Il sogno americano negli anni '20.", url:"#", color:"#ce9dff", categories:["Classici","Narrativa","Società"]},
-  {title:"Addio alle armi", author:"Ernest Hemingway", desc:"Romanzo sulla prima guerra mondiale.", url:"#", color:"#9dff9d", categories:["Guerra","Narrativa","Classici"]},
-  {title:"Per chi suona la campana", author:"Ernest Hemingway", desc:"Guerra civile spagnola e ideali.", url:"#", color:"#ff9dce", categories:["Guerra","Narrativa","Storico"]},
-  {title:"Il vecchio e il mare", author:"Ernest Hemingway", desc:"Lotta tra un pescatore e un marlin.", url:"#", color:"#9dffec", categories:["Classici","Narrativa","Avventura"]},
-  {title:"Anna Karenina", author:"Lev Tolstoj", desc:"Dramma passionale nella Russia zarista.", url:"#", color:"#ffec9d", categories:["Classici","Romantico","Drammatico"]},
-  {title:"Guerra e pace", author:"Lev Tolstoj", desc:"Epopea napoleonica in Russia.", url:"#", color:"#ecff9d", categories:["Epico","Storico","Classici"]},
-  {title:"Delitto e castigo", author:"Fëdor Dostoevskij", desc:"Romanzo psicologico sul crimine e redenzione.", url:"#", color:"#ff9dff", categories:["Classici","Psicologico","Crimine"]},
-  {title:"I fratelli Karamazov", author:"Fëdor Dostoevskij", desc:"Conflitto familiare e ricerca di Dio.", url:"#", color:"#9dffff", categories:["Classici","Filosofia","Psicologico"]},
-  {title:"L'idiota", author:"Fëdor Dostoevskij", desc:"Il conflitto tra bontà e società.", url:"#", color:"#ffff9d", categories:["Classici","Psicologico","Filosofia"]},
-  {title:"Orgoglio e pregiudizio", author:"Jane Austen", desc:"Commedia di costume nell'Inghilterra georgiana.", url:"#", color:"#9d9dff", categories:["Classici","Romantico","Società"]},
-  {title:"Cime tempestose", author:"Emily Brontë", desc:"Passione e vendetta nella brughiera inglese.", url:"#", color:"#ff9d9d", categories:["Classici","Romantico","Gotico"]},
-  {title:"Jane Eyre", author:"Charlotte Brontë", desc:"Romanzo di formazione di una governante.", url:"#", color:"#9dffb3", categories:["Classici","Formazione","Romantico"]},
-  {title:"Moby Dick", author:"Herman Melville", desc:"Epica caccia alla balena bianca.", url:"#", color:"#ffb39d", categories:["Epico","Avventura","Classici"]},
-  {title:"Le avventure di Huckleberry Finn", author:"Mark Twain", desc:"Viaggio sul Mississippi.", url:"#", color:"#b39dff", categories:["Avventura","Classici","Formazione"]},
-  {title:"La valle dell'Eden", author:"John Steinbeck", desc:"Saga familiare in California.", url:"#", color:"#9dffe6", categories:["Famiglia","Narrativa","Classici"]},
-  {title:"Furore", author:"John Steinbeck", desc:"La grande depressione americana.", url:"#", color:"#ffe69d", categories:["Storico","Società","Classici"]},
-  {title:"Il buio oltre la siepe", author:"Harper Lee", desc:"Razzismo e infanzia negli Stati Uniti.", url:"#", color:"#e6ff9d", categories:["Classici","Società","Formazione"]},
-  {title:"Canto di Natale", author:"Charles Dickens", desc:"Racconto fantastico sul Natale.", url:"#", color:"#ff9de6", categories:["Classici","Fantastico","Narrativa"]},
-  {title:"Grandi speranze", author:"Charles Dickens", desc:"Romanzo di formazione nella Londra vittoriana.", url:"#", color:"#9de6ff", categories:["Classici","Formazione","Narrativa"]},
-  {title:"David Copperfield", author:"Charles Dickens", desc:"Autobiografia immaginaria.", url:"#", color:"#e6ff9d", categories:["Classici","Formazione","Autobiografia"]},
-  {title:"Oliver Twist", author:"Charles Dickens", desc:"Bambini e povertà nella Londra vittoriana.", url:"#", color:"#ff9dce", categories:["Classici","Società","Narrativa"]},
-  {title:"Il ritratto di Dorian Gray", author:"Oscar Wilde", desc:"Romanzo sul culto della bellezza.", url:"#", color:"#9dceff", categories:["Classici","Estetismo","Psicologico"]},
-  {title:"Alice nel Paese delle Meraviglie", author:"Lewis Carroll", desc:"Avventura fantastica per bambini e adulti.", url:"#", color:"#ceff9d", categories:["Fantasy","Classici","Umoristico"]},
-  {title:"Il meraviglioso mago di Oz", author:"L. Frank Baum", desc:"Viaggio fantastico verso la Città di Smeraldo.", url:"#", color:"#ffce9d", categories:["Fantasy","Avventura","Classici"]},
-  {title:"Il piccolo principe", author:"Antoine de Saint-Exupéry", desc:"Favola filosofica sull'amicizia.", url:"#", color:"#9dffce", categories:["Filosofia","Classici","Formazione"]},
-  {title:"Il codice da Vinci", author:"Dan Brown", desc:"Thriller su misteri religiosi.", url:"#", color:"#ce9dff", categories:["Thriller","Mistero","Religioso"]},
-  {title:"Angeli e demoni", author:"Dan Brown", desc:"Thriller tra scienza e religione.", url:"#", color:"#9dff9d", categories:["Thriller","Mistero","Religioso"]},
-  {title:"Inferno", author:"Dan Brown", desc:"Thriller ambientato a Firenze.", url:"#", color:"#ff9d9d", categories:["Thriller","Mistero","Avventura"]},
-  {title:"Il simbolo perduto", author:"Dan Brown", desc:"Thriller sui massoni a Washington.", url:"#", color:"#9d9dff", categories:["Thriller","Mistero","Cospirazione"]},
-  {title:"Il trono di spade", author:"George R.R. Martin", desc:"Epica fantasy tra giochi di potere.", url:"#", color:"#ff9dff", categories:["Fantasy","Epico","Politico"]},
-  {title:"Lo hobbit", author:"J.R.R. Tolkien", desc:"Avventura nella Terra di Mezzo.", url:"#", color:"#9dffff", categories:["Fantasy","Avventura","Classici"]},
-  {title:"Il signore degli anelli", author:"J.R.R. Tolkien", desc:"Epica lotta tra bene e male.", url:"#", color:"#ffff9d", categories:["Fantasy","Epico","Classici"]},
-  {title:"Harry Potter e la pietra filosofale", author:"J.K. Rowling", desc:"Inizio della saga del mago Harry Potter.", url:"#", color:"#9dffb3", categories:["Fantasy","Young Adult","Avventura"]},
-  {title:"Harry Potter e la camera dei segreti", author:"J.K. Rowling", desc:"Secondo anno a Hogwarts.", url:"#", color:"#ffb39d", categories:["Fantasy","Young Adult","Mistero"]},
-  {title:"Harry Potter e il prigioniero di Azkaban", author:"J.K. Rowling", desc:"Fuga di Sirius Black.", url:"#", color:"#b39dff", categories:["Fantasy","Young Adult","Avventura"]},
-  {title:"Harry Potter e il calice di fuoco", author:"J.K. Rowling", desc:"Torneo Tre Maghi.", url:"#", color:"#9dffe6", categories:["Fantasy","Young Adult","Competizione"]},
-  {title:"Harry Potter e l'ordine della fenice", author:"J.K. Rowling", desc:"Resistenza contro Voldemort.", url:"#", color:"#ffe69d", categories:["Fantasy","Young Adult","Ribellione"]},
-  {title:"Harry Potter e il principe mezzosangue", author:"J.K. Rowling", desc:"Segreti del passato di Voldemort.", url:"#", color:"#e6ff9d", categories:["Fantasy","Young Adult","Mistero"]},
-  {title:"Harry Potter e i doni della morte", author:"J.K. Rowling", desc:"Battaglia finale a Hogwarts.", url:"#", color:"#ff9de6", categories:["Fantasy","Young Adult","Guerra"]},
-  {title:"Le cronache di Narnia", author:"C.S. Lewis", desc:"Avventure nel mondo di Narnia.", url:"#", color:"#9de6ff", categories:["Fantasy","Avventura","Classici"]},
-  {title:"Il leone, la strega e l'armadio", author:"C.S. Lewis", desc:"Primo viaggio a Narnia.", url:"#", color:"#e6ff9d", categories:["Fantasy","Avventura","Classici"]},
-  {title:"Il principe Caspian", author:"C.S. Lewis", desc:"Ritorno a Narnia.", url:"#", color:"#ff9dce", categories:["Fantasy","Avventura","Classici"]},
-  {title:"Il viaggio del veliero", author:"C.S. Lewis", desc:"Viaggio verso le terre orientali.", url:"#", color:"#9dceff", categories:["Fantasy","Avventura","Classici"]},
-  {title:"La sedia d'argento", author:"C.S. Lewis", desc:"Ricerca del principe Rilian.", url:"#", color:"#ceff9d", categories:["Fantasy","Avventura","Classici"]},
-  {title:"Il cavallo e il ragazzo", author:"C.S. Lewis", desc:"Avventure nel deserto di Narnia.", url:"#", color:"#ffce9d", categories:["Fantasy","Avventura","Classici"]},
-  {title:"Il nipote del mago", author:"C.S. Lewis", desc:"Origini di Narnia.", url:"#", color:"#9dffce", categories:["Fantasy","Avventura","Classici"]},
-  {title:"L'ultima battaglia", author:"C.S. Lewis", desc:"Fine di Narnia.", url:"#", color:"#ce9dff", categories:["Fantasy","Avventura","Classici"]},
-  {title:"Dune", author:"Frank Herbert", desc:"Epica saga su deserti e potere.", url:"#", color:"#9dff9d", categories:["Fantascienza","Epico","Politico"]},
-  {title:"Fondazione", author:"Isaac Asimov", desc:"Caduta e rinascita dell'impero galattico.", url:"#", color:"#ff9d9d", categories:["Fantascienza","Epico","Politico"]},
-  {title:"Io, robot", author:"Isaac Asimov", desc:"Racconti sulle tre leggi della robotica.", url:"#", color:"#9d9dff", categories:["Fantascienza","Racconti","Filosofia"]},
-  {title:"Ciclo delle fondazioni", author:"Isaac Asimov", desc:"Saga completa della Fondazione.", url:"#", color:"#ff9dff", categories:["Fantascienza","Epico","Classici"]},
-  {title:"Il gioco di Ender", author:"Orson Scott Card", desc:"Bambini geniali nella guerra spaziale.", url:"#", color:"#9dffff", categories:["Fantascienza","Guerra","Formazione"]},
-  {title:"Il racconto dell'ancella", author:"Margaret Atwood", desc:"Distopia femminista.", url:"#", color:"#ffff9d", categories:["Distopico","Femminista","Politico"]},
-  {title:"I testamenti", author:"Margaret Atwood", desc:"Seguito del Racconto dell'ancella.", url:"#", color:"#9dffb3", categories:["Distopico","Femminista","Politico"]},
-  {title:"Il conte di Montecristo", author:"Alexandre Dumas", desc:"Storia di vendetta e redenzione.", url:"#", color:"#ffb39d", categories:["Avventura","Classici","Vendetta"]},
-  {title:"I tre moschettieri", author:"Alexandre Dumas", desc:"Avventure nella Francia del '600.", url:"#", color:"#b39dff", categories:["Avventura","Classici","Storico"]},
-  {title:"Vent'anni dopo", author:"Alexandre Dumas", desc:"Seguito de I tre moschettieri.", url:"#", color:"#9dffe6", categories:["Avventura","Classici","Storico"]},
-  {title:"Il visconte di Bragelonne", author:"Alexandre Dumas", desc:"Conclusione della saga dei moschettieri.", url:"#", color:"#ffe69d", categories:["Avventura","Classici","Storico"]},
-  {title:"Robin Hood", author:"Alexandre Dumas", desc:"Le avventure del fuorilegge generoso.", url:"#", color:"#e6ff9d", categories:["Avventura","Classici","Storico"]},
-  {title:"La donna del viaggiatore nel tempo", author:"Audrey Niffenegger", desc:"Amore attraverso il tempo.", url:"#", color:"#ff9de6", categories:["Romantico","Fantascienza","Drammatico"]},
-  {title:"Le due torri", author:"J.R.R. Tolkien", desc:"Secondo libro del Signore degli Anelli.", url:"#", color:"#9de6ff", categories:["Fantasy","Epico","Classici"]},
-  {title:"Il ritorno del re", author:"J.R.R. Tolkien", desc:"Conclusione del Signore degli Anelli.", url:"#", color:"#e6ff9d", categories:["Fantasy","Epico","Classici"]},
-  {title:"Il Silmarillion", author:"J.R.R. Tolkien", desc:"Mitologia della Terra di Mezzo.", url:"#", color:"#ff9dce", categories:["Fantasy","Mitologia","Classici"]},
-  {title:"I figli di Húrin", author:"J.R.R. Tolkien", desc:"Tragedia nella Terra di Mezzo.", url:"#", color:"#9dceff", categories:["Fantasy","Tragedia","Classici"]},
-  {title:"La caduta di Gondolin", author:"J.R.R. Tolkien", desc:"Storia dell'antica città elfica.", url:"#", color:"#ceff9d", categories:["Fantasy","Epico","Classici"]},
-  {title:"Beren e Lúthien", author:"J.R.R. Tolkien", desc:"Amore tra uomo ed elfa.", url:"#", color:"#ffce9d", categories:["Fantasy","Romantico","Classici"]},
-  {title:"Lo strano caso del dottor Jekyll e del signor Hyde", author:"Robert Louis Stevenson", desc:"Doppia personalità e mistero.", url:"#", color:"#9dffce", categories:["Classici","Mistero","Psicologico"]},
-  {title:"L'isola del tesoro", author:"Robert Louis Stevenson", desc:"Avventura piratesca.", url:"#", color:"#ce9dff", categories:["Avventura","Classici","Piratesco"]},
-  {title:"Il maestro di Ballantrae", author:"Robert Louis Stevenson", desc:"Conflitto tra fratelli.", url:"#", color:"#9dff9d", categories:["Avventura","Classici","Drammatico"]},
-  {title:"Il club dei suicidi", author:"Robert Louis Stevenson", desc:"Racconti misteriosi.", url:"#", color:"#ff9d9d", categories:["Mistero","Racconti","Classici"]},
-  {title:"Il ragazzo rapito", author:"Robert Louis Stevenson", desc:"Avventura nelle Highlands scozzesi.", url:"#", color:"#9d9dff", categories:["Avventura","Classici","Formazione"]},
-  {title:"Catriona", author:"Robert Louis Stevenson", desc:"Seguito de Il ragazzo rapito.", url:"#", color:"#ff9dff", categories:["Avventura","Classici","Formazione"]},
-  {title:"Le miniere di re Salomone", author:"H. Rider Haggard", desc:"Avventura in Africa.", url:"#", color:"#9dffff", categories:["Avventura","Esplorazione","Classici"]},
-  {title:"She", author:"H. Rider Haggard", desc:"Avventura esotica e misteriosa.", url:"#", color:"#ffff9d", categories:["Avventura","Mistero","Classici"]},
-  {title:"Allan Quatermain", author:"H. Rider Haggard", desc:"Altre avventure in Africa.", url:"#", color:"#9dffb3", categories:["Avventura","Esplorazione","Classici"]},
-  {title:"La guerra dei mondi", author:"H.G. Wells", desc:"Invasione aliena della Terra.", url:"#", color:"#ffb39d", categories:["Fantascienza","Invasione","Classici"]},
-  {title:"La macchina del tempo", author:"H.G. Wells", desc:"Viaggio nel futuro lontano.", url:"#", color:"#b39dff", categories:["Fantascienza","Viaggio nel tempo","Classici"]},
-  {title:"L'isola del dottor Moreau", author:"H.G. Wells", desc:"Esperimenti genetici su un'isola.", url:"#", color:"#9dffe6", categories:["Fantascienza","Horror","Classici"]},
-  {title:"L'uomo invisibile", author:"H.G. Wells", desc:"Scienziato che scopre l'invisibilità.", url:"#", color:"#ffe69d", categories:["Fantascienza","Classici","Mistero"]},
-  {title:"I primi uomini sulla Luna", author:"H.G. Wells", desc:"Viaggio verso il satellite.", url:"#", color:"#e6ff9d", categories:["Fantascienza","Avventura","Classici"]},
-  {title:"Il cibo degli dei", author:"H.G. Wells", desc:"Sostanza che fa crescere a dismisura.", url:"#", color:"#ff9de6", categories:["Fantascienza","Fantasy","Classici"]},
-  {title:"La verità sul caso del signor Valdemar", author:"Edgar Allan Poe", desc:"Racconti del terrore.", url:"#", color:"#9de6ff", categories:["Horror","Racconti","Classici"]},
-  {title:"I delitti della Rue Morgue", author:"Edgar Allan Poe", desc:"Primo racconto poliziesco.", url:"#", color:"#e6ff9d", categories:["Giallo","Poliziesco","Classici"]},
-  {title:"Il gatto nero", author:"Edgar Allan Poe", desc:"Racconto horror sul soprannaturale.", url:"#", color:"#ff9dce", categories:["Horror","Psicologico","Classici"]},
-  {title:"La caduta della casa Usher", author:"Edgar Allan Poe", desc:"Racconto gotico e claustrofobico.", url:"#", color:"#9dceff", categories:["Gotico","Horror","Classici"]},
-  {title:"Il pozzo e il pendolo", author:"Edgar Allan Poe", desc:"Orrori dell'Inquisizione spagnola.", url:"#", color:"#ceff9d", categories:["Horror","Storico","Classici"]},
-  {title:"Il corvo", author:"Edgar Allan Poe", desc:"Poesia sul lutto e la disperazione.", url:"#", color:"#ffce9d", categories:["Poesia","Gotico","Classici"]},
-  {title:"Annabel Lee", author:"Edgar Allan Poe", desc:"Poesia d'amore e morte.", url:"#", color:"#9dffce", categories:["Poesia","Romantico","Classici"]},
-  {title:"Lo scarabeo d'oro", author:"Edgar Allan Poe", desc:"Caccia al tesoro e crittografia.", url:"#", color:"#ce9dff", categories:["Mistero","Avventura","Classici"]},
-  {title:"Le avventure di Sherlock Holmes", author:"Arthur Conan Doyle", desc:"Raccolta di indagini del detective.", url:"#", color:"#9dff9d", categories:["Giallo","Poliziesco","Classici"]},
-  {title:"Il mastino dei Baskerville", author:"Arthur Conan Doyle", desc:"Mistero nella brughiera inglese.", url:"#", color:"#ff9d9d", categories:["Giallo","Mistero","Classici"]},
-  {title:"Uno studio in rosso", author:"Arthur Conan Doyle", desc:"Prima avventura di Sherlock Holmes.", url:"#", color:"#9d9dff", categories:["Giallo","Poliziesco","Classici"]},
-  {title:"Il segno dei quattro", author:"Arthur Conan Doyle", desc:"Tesoro e vendetta indiana.", url:"#", color:"#ff9dff", categories:["Giallo","Avventura","Classici"]},
-  {title:"La valle della paura", author:"Arthur Conan Doyle", desc:"Mistero in una comunità segreta.", url:"#", color:"#9dffff", categories:["Giallo","Mistero","Classici"]},
-  {title:"L'ultimo saluto", author:"Arthur Conan Doyle", desc:"Ultime avventure di Sherlock Holmes.", url:"#", color:"#ffff9d", categories:["Giallo","Poliziesco","Classici"]},
-  {title:"Il ritorno di Sherlock Holmes", author:"Arthur Conan Doyle", desc:"Ritorno del detective dopo la morte.", url:"#", color:"#9dffb3", categories:["Giallo","Poliziesco","Classici"]},
-  {title:"Le memorie di Sherlock Holmes", author:"Arthur Conan Doyle", desc:"Altre indagini del detective.", url:"#", color:"#ffb39d", categories:["Giallo","Poliziesco","Classici"]},
-  {title:"Il mondo perduto", author:"Arthur Conan Doyle", desc:"Esplorazione preistorica in Sud America.", url:"#", color:"#b39dff", categories:["Fantascienza","Avventura","Classici"]}
+  {
+    "title": "Il presepio",
+    "author": "Giorgio Manganelli",
+    "desc": "Esiste, certamente, una felicità natalizia – ma essa è intrecciata indissolubilmente a una «infelicità natalizia». Ogni vera festa è gioiosa e angosciosa – e perderebbe senso se uno solo dei suoi elementi prevalesse sino a far dimenticare l’altro. Mai questo appare con evidenza così provocatoria come per il Natale, poiché «si sa che al Natale non si dà fuga; in nessun modo». Anni fa (non sappiamo con certezza quando) Manganelli cominciò a scrivere e portò a termine questo libro, senza farne parola a nessuno. Oggi, ritrovato fra le sue carte, \"Il presepio\" ci appare come una importante scoperta: un viaggio sfrenato all’interno della festa per eccellenza.",
+    "color": "#ffd37b",
+    "categories": ["Letteratura", "Narrativa italiana", "Saggio narrativo", "Meta-letteratura", "Adelphi"]
+  },
+  {
+    "title": "L'Iguana che visse due volte",
+    "author": "Autori vari (omaggio a Anna Maria Ortese)",
+    "desc": "Uno dei romanzi più suggestivi della narrativa italiana del dopoguerra è \"L'iguana\" di Anna Maria Ortese. In una sperduta isola, Daddo il viaggiatore scopre una ragazza dolcissima. Lui la vede così, mentre per gli altri è solo una bestia repellente. Assistiamo alla più sconcertante regola del mondo: ciascuno vede il bene e il male a modo suo e cerca di imporre il proprio giudizio.",
+    "color": "#ff7b7b",
+    "categories": ["Letteratura", "Narrativa italiana", "Omaggio letterario", "Raccolta saggi", "Elliot"]
+  },
+  {
+    "title": "Lo specchio che fugge",
+    "author": "Giovanni Papini",
+    "desc": null,
+    "color": "#d37bff",
+    "categories": ["Letteratura", "Narrativa italiana", "Classici", "Raccolta racconti", "Mondadori"]
+  },
+  {
+    "title": "Dissipatio H.G.",
+    "author": "Guido Morselli",
+    "desc": null,
+    "color": "#7bd3ff",
+    "categories": ["Letteratura", "Narrativa italiana", "Romanzo filosofico", "Distopia", "Adelphi"]
+  },
+  {
+    "title": "L'Aleph",
+    "author": "Jorge Luis Borges",
+    "desc": "Per molti lettori di questi ultimi decenni \"L'Aleph\" è il libro dove scoprirono non solo un nuovo grande scrittore, ma un nuovo modo di essere della letteratura. Fu una specie di folgorazione, che poi si trasmise a tutta l'opera di Borges. Intanto, i titoli di alcuni di questi racconti (da \"Lo Zahir\" a \"Deutsches Requiem\", da \"La ricerca di Averroè\" a \"L'immortale\") entravano nella geografia mentale dei lettori come luoghi da sempre familiari e misteriosi.",
+    "color": "#ff9e7b",
+    "categories": ["Letteratura", "Narrativa straniera", "Racconti fantastici", "Realismo magico", "Adelphi"]
+  },
+  {
+    "title": "The Aleph",
+    "author": "Jorge Luis Borges",
+    "desc": "Borges' stories have a deceptively simple, almost laconic style. In maddeningly ingenious stories that play with the very form of the short story, Borges returns again and again to his themes: dreams, labyrinths, mirrors, infinite libraries, the manipulations of chance, gaucho knife-fighters, transparent tigers and the elusive nature of identity itself.",
+    "color": "#7bffa1",
+    "categories": ["Letteratura", "Narrativa straniera", "Racconti", "Fantastico", "Penguin Books"]
+  },
+  {
+    "title": "Alonso e i visionari",
+    "author": "Anna Maria Ortese",
+    "desc": "Alonso è un piccolo puma dell'Arizona. I \"visionari\" sono gli esseri che, via via, hanno la ventura di incontrarlo: un illustre professore italiano, ispiratore di terroristi e di altri \"uomini del lutto\"; i suoi figli, uno dei quali votato a una leggendaria clandestinità; un professore americano, che ha la terribile debolezza di voler capire e compatire. Tutti accomunati, nella loro funesta lucidità, da una sorta di pazzia che è come un \"buco nell'azzurro, dal quale entrano il freddo e la cecità degli spazi stellari\".",
+    "color": "#ff7bd3",
+    "categories": ["Letteratura", "Narrativa italiana", "Romanzo visionario", "Realismo magico", "Adelphi"]
+  },
+  {
+    "title": "L'altra parte",
+    "author": "Alfred Kubin",
+    "desc": "Con 52 disegni dell'autore. Che cos'è Perla, la città artificiale in cui Alfred Kubin, grande disegnatore e maestro del fantastico, ha ambientato il suo unico romanzo? È un mosaico di ruderi, di antichità, di avanzi decrepiti e corrosi del passato, tratti dai più famosi angoli del mondo. Una quinta perfetta per la sua popolazione di nevrastenici e nostalgici in fuga dal proprio tempo – ma anche il dominio di un sovrano inafferrabile che tiene sotto il suo incantesimo uomini e cose, accomunandoli in un unico, allucinante disegno.",
+    "color": "#7b8fff",
+    "categories": ["Letteratura", "Narrativa straniera", "Romanzo fantastico", "Illustrato", "Adelphi"]
+  },
+  {
+    "title": "La pentola dell'oro",
+    "author": "James Stephens",
+    "desc": null,
+    "color": "#ffd37b",
+    "categories": ["Letteratura", "Narrativa straniera", "Fantasy", "Folklore irlandese", "Adelphi"]
+  },
+  {
+    "title": "Il Maestro del Giudizio universale",
+    "author": "Leo Perutz",
+    "desc": "Vienna, primi del Novecento. A parlare in prima persona - e a redigere così una sorta di memoriale a sua discolpa - è il barone von Yosch, militare in congedo, follemente innamorato della bella Dina, andata in sposa a un celebre, osannato attore di corte. L'improvviso decesso di quest'ultimo - secondo di una serie di delitti camuffati da suicidi, che nell'arco di cinque giorni funestano come un \"tragico incubo\" la vita della città - avviene in circostanze tali da far convogliare ogni sospetto sul giovane barone.",
+    "color": "#a37bff",
+    "categories": ["Letteratura", "Narrativa straniera", "Thriller metafisico", "Giallo storico", "Adelphi"]
+  },
+  {
+    "title": "Il fiume dalla foce alla fonte",
+    "author": "Piero Scanziani",
+    "desc": "In un lungo flusso di riflessioni, una sorta di autobiografia in terza persona, durante una notte insonne un anziano narratore ripercorre un secolo articolato come il novecento, tra la grande storia e le silenziose dinamiche della quotidianità. Dalla giovinezza in Svizzera come correttore di bozze e poi inviato speciale, al trasferimento a Roma attraverso l'Italia sconfitta, distrutta e occupata dei tardi anni quaranta, fino al miracolo economico.",
+    "color": "#7bffd3",
+    "categories": ["Letteratura", "Narrativa italiana", "Autobiografia", "Romanzo filosofico", "Utopia"]
+  },
+  {
+    "title": "Barbagrigia",
+    "author": "Brian W. Aldiss",
+    "desc": "L'Inghilterra è una landa selvaggia fitta di cupe foreste minacciose, abitata da pochi uomini vecchi e stanchi, resi sterili dalle radiazioni atomiche. Non nascono più bambini e il genere umano presto si estinguerà. Qualcuno però coltiva una speranza e inizia un pericoloso viaggio lungo il Tamigi.",
+    "color": "#ff7b7b",
+    "categories": ["Letteratura", "Fantascienza", "Romanzo post-apocalittico", "Distopia", "Sellerio"]
+  },
+  {
+    "title": "La nube purpurea",
+    "author": "Matthew Phipps Shiel",
+    "desc": "La fine del mondo preannunciata da una catastrofe; la scomparsa per affondamento di tutta l'Italia meridionale; l'incendio e la distruzione di Londra, Parigi, Costantinopoli, Pechino per mano dello stesso protagonista, apparentemente unico superstite dell'apocalisse. Sono le vicende raccontate con lucidità visionaria in questo romanzo.",
+    "color": "#d37bff",
+    "categories": ["Letteratura", "Fantascienza", "Romanzo apocalittico", "Avventura", "Bompiani"]
+  },
+  {
+    "title": "Moby Dick / Moby Dick",
+    "author": "Herman Melville",
+    "desc": null,
+    "color": "#7bd3ff",
+    "categories": ["Letteratura", "Classici", "Romanzo d'avventura", "Narrativa americana", "Planeta"]
+  },
+  {
+    "title": "L'altra parte (edizione 1965)",
+    "author": "Alfred Kubin",
+    "desc": "Apre la collana Biblioteca Adelphi. Libro affascinante. Splendide illustrazioni dell'autore. Alcuni dei motivi del libro si ritrovano in Kafka, sopratutto nel Castello.",
+    "color": "#ff9e7b",
+    "categories": ["Letteratura", "Classici", "Romanzo fantastico", "Illustrato", "Adelphi"]
+  },
+  {
+    "title": "Il monte Analogo",
+    "author": "René Daumal",
+    "desc": "Un gruppo di singolari ed esperti alpinisti, certi dell'esistenza, in qualche parte del globo, di una montagna la cui vetta è più alta di tutte le vette, decide un giorno di partire da Parigi per tentare di scoprirla e di darne la scalata. Dopo una navigazione \" non euclidea \", a bordo di un'imbarcazione chiamata l'Impossibile, gli esploratori approdano nell'isola-continente del Monte Analogo, dove trovano una popolazione, dagli usi apparentemente stravaganti, che discende da uomini di tutti i tempi e che, come loro, vive ormai, soltanto, nella speranza di scalare la vetta.",
+    "color": "#7bffa1",
+    "categories": ["Letteratura", "Romanzo filosofico", "Allegoria", "Avventura simbolica", "Adelphi"]
+  },
+  {
+    "title": "La guerra civile",
+    "author": "M. Anneo Lucano",
+    "desc": null,
+    "color": "#ff7bd3",
+    "categories": ["Letteratura", "Classici latini", "Poema epico", "Storico", "Garzanti"]
+  },
+  {
+    "title": "Ma gli androidi sognano pecore elettriche?",
+    "author": "Philip K. Dick",
+    "desc": "Nel 1992 la Guerra Mondiale ha ucciso milioni di persone, e condannato all'estinzione intere specie, costringendo l'umanità ad andare nello spazio. Chi è rimasto sogna di possedere un animale vivente, e le compagnie producono copie incredibilmente realistiche: gatti, cavalli, pecore... Anche l'uomo è stato duplicato. I replicanti sono simulacri perfetti e indistinguibili, e per questo motivo sono stati banditi dalla Terra.",
+    "color": "#7b8fff",
+    "categories": ["Letteratura", "Fantascienza", "Romanzo distopico", "Cyberpunk", "Fanucci"]
+  },
+  {
+    "title": "Todo modo",
+    "author": "Leonardo Sciascia",
+    "desc": "Se dovessimo indicare una forma romanzesca capace di rivelare come si compone e come si manifesta quell'impasto vischioso del potere che la politica italiana ha avuto per lunghi anni il funesto privilegio di produrre, basterebbe rimandare alle asciutte pagine di \"Todo modo\", alla scansione crudele dei suoi episodi, che solcano una materia informe, torbida e sinistra, quale nessun altro romanziere italiano aveva saputo affrontare.",
+    "color": "#ffd37b",
+    "categories": ["Letteratura", "Narrativa italiana", "Romanzo politico", "Giallo", "Adelphi"]
+  },
+  {
+    "title": "Il mestiere di vivere",
+    "author": "Cesare Pavese",
+    "desc": null,
+    "color": "#ff7b7b",
+    "categories": ["Letteratura", "Diario", "Autobiografia", "Narrativa italiana", "Il Saggiatore"]
+  },
+  {
+    "title": "Pensieri degli anni difficili",
+    "author": "Albert Einstein",
+    "desc": "Pubblicato nel 1950 e uscito per la prima volta in Italia nel 1965, \"Pensieri degli anni difficili\" raccoglie le riflessioni di Albert Einstein che si snodano dal 1933 al 1950. Al centro di questi scritti, pensati per un pubblico di formazione non scientifica, sono i temi più cari a Einstein: l'amore per la scienza, la difesa delle libertà fondamentali e il rispetto per il disaccordo e l'indipendenza intellettuale.",
+    "color": "#d37bff",
+    "categories": ["Saggistica", "Filosofia", "Scienza", "Pensiero scientifico", "Bollati Boringhieri"]
+  },
+  {
+    "title": "Il lungo addio",
+    "author": "Raymond Chandler",
+    "desc": null,
+    "color": "#7bd3ff",
+    "categories": ["Letteratura", "Giallo", "Noir", "Narrativa americana", "Mondadori"]
+  },
+  {
+    "title": "La doppia vita di M. Laurent",
+    "author": "Santo Piazzese",
+    "desc": "A Palermo, su un marciapiede viscido di pioggia, un morto con il cuore trapassato da un colpo di pistola. Dopo l'esordio ne \"I delitti di via Medina-Sidonia\", un altro caso costringe all'indagine Lorenzo La Marca, biologo per vocazione e detective per necessità (o forse è il contrario?).",
+    "color": "#ff9e7b",
+    "categories": ["Letteratura", "Giallo", "Narrativa italiana", "Romanzo poliziesco", "Sellerio"]
+  },
+  {
+    "title": "L'isola del giorno prima",
+    "author": "Umberto Eco",
+    "desc": "Nell'estate del 1643 un giovane piemontese naufraga, nei mari del sud, su di una nave deserta. Di fronte a lui un'Isola che non può raggiungere. Intorno a lui un ambiente apparentemente accogliente. Solo, su un mare sconosciuto, Roberto de la Grive vede per la prima volta in vita sua cieli, acque, uccelli, piante, pesci e coralli che non sa come nominare.",
+    "color": "#7bffa1",
+    "categories": ["Letteratura", "Narrativa italiana", "Romanzo storico", "Filosofico", "Bompiani"]
+  },
+  {
+    "title": "La città del Sole",
+    "author": "Tommaso Campanella",
+    "desc": "\"Nell'ignota isola dei mari della Sonda, presso Sumatra, vicino all'equatore, sorge questo piccolo Stato felice, circondato da re tirannici che invano cercano di sopraffarlo, costituito come una polis ellenica, cioè come una distesa di campi ben coltivati intorno a una città...\".",
+    "color": "#ff7bd3",
+    "categories": ["Letteratura", "Filosofia", "Utopia", "Classici italiani", "Laterza"]
+  },
+  {
+    "title": "Quer pasticciaccio brutto de via Merulana",
+    "author": "Carlo Emilio Gadda",
+    "desc": "Nel giro di pochi giorni, nel marzo del 1927, un furto di denaro e gioielli ai danni di una svaporata e fantasiosa vedova, la contessa Menegazzi, e poi l'omicidio della ricca, splendida e malinconica Liliana Balducci, sgozzata con ferocia inaudita, incrinano la decorosa quiete di un grigio palazzo abitato da pescecani, in via Merulana.",
+    "color": "#7b8fff",
+    "categories": ["Letteratura", "Narrativa italiana", "Giallo", "Romanzo sperimentale", "Adelphi"]
+  },
+  {
+    "title": "La Certosa di Parma",
+    "author": "Stendhal",
+    "desc": "Gli intrighi politici e le passioni amorose animano il capolavoro di Stendhal, composto in soli cinquantadue giorni sull'onda di un impeto creativo che costrinse l'autore in casa senza nessun'altra compagnia che uno scrivano. Dalla sconfitta napoleonica di Waterloo all'isolamento nella Certosa di Parma, Stendhal racconta il cammino travagliato di Fabrizio del Dongo, protagonista del romanzo, verso la felicità.",
+    "color": "#ffd37b",
+    "categories": ["Letteratura", "Classici francesi", "Romanzo storico", "Romantico", "L'Espresso-Repubblica"]
+  },
+  {
+    "title": "Solaris",
+    "author": "Stanislaw Lem",
+    "desc": "\"Solaris\" è il capolavoro della fantascienza filosofica. Siamo nel lembo più estremo dell'universo esplorato dal genere umano. Un astronauta, dalla Terra, approda nella stazione spaziale che gira intorno al pianeta Solaris. Qui trova un'atmosfera di mistero e sospetto: nessuno lo accoglie, i pochi ospiti della astronave sembrano angosciati e sopraffatti, c'è un morto recente a cui si allude con circospezione ma senza sorpresa, gli oggetti subiscono strane deformazioni, si avvertono presenze.",
+    "color": "#ff7b7b",
+    "categories": ["Letteratura", "Fantascienza", "Romanzo filosofico", "Psicologico", "Sellerio"]
+  }
 ];
 
 // ----------------------
